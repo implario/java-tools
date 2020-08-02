@@ -30,10 +30,13 @@ jar {
 publishing {
     repositories {
         maven {
-            url = System.getenv("CLEPTO_MVN_URL")
+            String credentialsStr = System.getenv("MAVEN_CREDENTIALS")
+            if (credentialsStr == null) return
+            String[] args = credentialsStr.split(" ");
+            url = args[0]
             credentials {
-                username = System.getenv("CLEPTO_MVN_USER")
-                password = System.getenv("CLEPTO_MVN_PASSWORD")
+                username = args[1]
+                password = args[2]
             }
         }
     }
