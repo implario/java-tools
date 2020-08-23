@@ -159,22 +159,15 @@ public class OOOOOO {
 			}
 	};
 
-	public static void main(String[] args) throws InterruptedException {
-		while (true) {
-			Thread.sleep(100);
-			System.out.println(mojaOborona());
-		}
-	}
-
-	private static String mojaOborona() {
+	public static String mojaOborona() {
 		String[][] style = ListUtils.random(styles);
 		StringBuilder builder = new StringBuilder();
-		randomizeWord("оо000.ооо", style, builder);
-		builder.append('/');
+		randomizeWord("оооооооооо", style, builder);
+		builder.append(' ');
 		randomizeWord("моя", style, builder);
-		builder.append('_');
+		builder.append(' ');
 		randomizeWord("оборона", style, builder);
-		builder.append('/');
+		builder.append(' ');
 		for (int i = 0; i < words.length; i++) {
 			if (i > 0) builder.append('_');
 			randomizeWord(ListUtils.random(words[i]), style, builder);
@@ -182,7 +175,7 @@ public class OOOOOO {
 		return builder.toString();
 	}
 
-	private static void randomizeWord(String word, String[][] style, StringBuilder dst) {
+	public static void randomizeWord(String word, String[][] style, StringBuilder dst) {
 		for (char c : word.toCharArray()) {
 			int id = c - 'а';
 			if (id < 0 || id >= style.length) dst.append(c);
