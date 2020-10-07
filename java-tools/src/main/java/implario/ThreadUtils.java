@@ -28,6 +28,7 @@ public class ThreadUtils {
 			Thread.sleep(millis);
 			return false;
 		} catch (InterruptedException e) {
+			onInterruption.run();
 			return true;
 		}
 	}
