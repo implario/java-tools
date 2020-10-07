@@ -1,51 +1,60 @@
 apply plugin: 'java'
 apply plugin: 'maven-publish'
 
-group 'clepto'
-version '0.3.8'
-compileJava.options.encoding 'UTF-8'
-tasks.withType(JavaCompile) {
-    options.encoding 'UTF-8'
-}
+subprojects {
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-}
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
 
-dependencies {
-    testImplementation 'junit:junit:4.12'
-    annotationProcessor 'org.projectlombok:lombok:1.18.12'
-    compileOnly 'org.projectlombok:lombok:1.18.12'
-}
+    group 'implario'
+    version '1.0.0'
 
-jar {
-    from sourceSets.main.resources
-    from {
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    compileJava.options.encoding 'UTF-8'
+    tasks.withType(JavaCompile) {
+        options.encoding 'UTF-8'
     }
-}
 
-publishing {
     repositories {
-        maven {
-            String credentialsStr = System.getenv("MAVEN_CREDENTIALS")
-            if (credentialsStr == null) return
-            String[] args = credentialsStr.split(" ");
-            url = args[0]
-            credentials {
-                username = args[1]
-                password = args[2]
-            }
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation 'junit:junit:4.12'
+        annotationProcessor 'org.projectlombok:lombok:1.18.12'
+        compileOnly 'org.projectlombok:lombok:1.18.12'
+    }
+
+    jar {
+        from sourceSets.main.resources
+        from {
+            duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+            configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
         }
     }
-    publications {
-        maven(MavenPublication) {
-            groupId = rootProject.group
-            artifactId = rootProject.name
-            version = rootProject.version
-            from components.java
+
+    def javaComponent = components.getByName('java')
+
+    publishing {
+        repositories {
+            maven {
+                String credentialsStr = System.getenv("MAVEN_CREDENTIALS")
+                if (credentialsStr == null) return
+                String[] args = credentialsStr.split(" ")
+                url = args[0]
+                credentials {
+                    username = args[1]
+                    password = args[2]
+                }
+            }
+        }
+        publications {
+            register 'maven', MavenPublication, {
+                groupId = project.group
+                artifactId = project.name
+                version = project.version
+                from javaComponent
+            }
         }
     }
 }

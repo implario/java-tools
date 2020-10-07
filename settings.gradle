@@ -1,2 +1,6 @@
-rootProject.name = 'clepto-java'
+rootProject.name = 'java-tools'
 
+include 'java-tools'
+include 'annotations'
+include 'humanize'
+include 'math'
