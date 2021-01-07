@@ -32,10 +32,12 @@ public class MatchMaking<U, P extends Collection<U>> {
 	public void remove(Iterable<U> players) {
 		List<P> queue = this.queue;
 		for (U player : players) {
-			P party = Objects.requireNonNull(this.playerPartyMap.remove(player));
-			if (!party.remove(player)) {
-				throw new IllegalStateException("Broken mappings");
-			}
+
+			P party = this.playerPartyMap.remove(player);
+			if (party == null) continue;
+
+			party.remove(player);
+
 			if (party.isEmpty()) {
 				queue.remove(party);
 			}
@@ -80,6 +82,7 @@ public class MatchMaking<U, P extends Collection<U>> {
 			for (List<P> team : teams) {
 				for (P party : team) {
 					queue.remove(party);
+					playerPartyMap.keySet().removeAll(party);
 				}
 			}
 
