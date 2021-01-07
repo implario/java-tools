@@ -1,5 +1,6 @@
 package implario.math;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -103,6 +104,7 @@ public interface V3 {
 
 	@Getter
 	@RequiredArgsConstructor
+	@EqualsAndHashCode
 	class Impl implements V3 {
 
 		public final double x, y, z;
