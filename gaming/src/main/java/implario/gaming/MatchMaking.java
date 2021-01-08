@@ -18,6 +18,7 @@ public class MatchMaking<U, P extends Collection<U>> {
 	public void add(P party) {
 		for (U member : party) {
 			if (this.playerPartyMap.putIfAbsent(member, party) != null) {
+				this.playerPartyMap.keySet().removeAll(party);
 				throw new IllegalStateException("Tried to add a member that is already in the queue: " + member);
 			}
 		}

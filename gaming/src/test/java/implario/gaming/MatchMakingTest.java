@@ -12,7 +12,7 @@ public class MatchMakingTest {
 	private final Deque<String> games = new LinkedList<>();
 
 	private final MatchMaking<Player, Collection<Player>> matchMaking = new MatchMaking<>(
-			(a, b) -> Math.abs(averageRating(a) - averageRating(b)) < 100,
+			(a, b) -> Math.abs(averageRating(a) - averageRating(b)) < 130,
 			teams -> games.addLast(getFormat(teams))
 	);
 
@@ -62,6 +62,72 @@ public class MatchMakingTest {
 		matchMaking.update(2, 3);
 		assertEquals("3x2", games.pop());
 		assertTrue(matchMaking.getQueue().isEmpty());
+
+	}
+
+	@Test
+	public void testLeavesCleanup() {
+		Player leaver = new Player(10);
+		matchMaking.add(party(leaver));
+
+		matchMaking.remove(leaver);
+
+		assertTrue(matchMaking.getQueue().isEmpty());
+	}
+
+	@Test
+	public void testRepeatedJoin() {
+		Player joiner = new Player(10);
+		assertThrows(IllegalStateException.class, () -> {
+			matchMaking.add(party(joiner));
+			matchMaking.add(party(joiner));
+		});
+		assertThrows(IllegalStateException.class, () -> {
+			matchMaking.add(party(joiner, joiner));
+		});
+
+		assertTrue(matchMaking.getPlayerPartyMap().isEmpty());
+	}
+
+	@Test
+	public void testRating() {
+		List<Player> weakParty = party(new Player(10), new Player(20), new Player(30));
+		List<Player> mediumParty = party(new Player(110), new Player(120), new Player(130));
+		List<Player> strongParty = party(new Player(210), new Player(220), new Player(230));
+
+		// Weak party joins first
+		matchMaking.add(weakParty);
+		matchMaking.add(strongParty);
+
+		matchMaking.update(2, 3);
+		assertTrue(games.isEmpty());
+
+		matchMaking.add(mediumParty);
+		matchMaking.update(2, 3);
+		// So weak party should get into the game first
+		assertEquals(strongParty, matchMaking.getQueue().get(0));
+		assertEquals("3x2", games.pop());
+
+		matchMaking.add(party(new Player(200)));
+		matchMaking.add(party(new Player(200)));
+		matchMaking.add(party(new Player(10)));
+		matchMaking.add(party(new Player(10)));
+		matchMaking.add(party(new Player(10)));
+		matchMaking.add(party(new Player(200)));
+		matchMaking.update(2, 3);
+
+		Iterator<Collection<Player>> iterator = matchMaking.getQueue().iterator();
+
+		for (int i = 0; i < 3; i++) {
+			assertEquals(10, averageRating(iterator.next()));
+		}
+
+		assertFalse(iterator.hasNext());
+		assertEquals("3x2", games.pop());
+
+		matchMaking.update(3, 1);
+		assertTrue(matchMaking.getQueue().isEmpty());
+		assertTrue(matchMaking.getPlayerPartyMap().isEmpty());
 
 	}
 
