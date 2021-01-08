@@ -17,10 +17,12 @@ public class MatchMaking<U, P extends Collection<U>> {
 
 	public void add(P party) {
 		for (U member : party) {
-			if (this.playerPartyMap.putIfAbsent(member, party) != null) {
-				this.playerPartyMap.keySet().removeAll(party);
+			if (this.playerPartyMap.containsKey(member)) {
 				throw new IllegalStateException("Tried to add a member that is already in the queue: " + member);
 			}
+		}
+		for (U member : party) {
+			this.playerPartyMap.put(member, party);
 		}
 		queue.add(party);
 	}
@@ -110,6 +112,11 @@ public class MatchMaking<U, P extends Collection<U>> {
 			considered.remove(party);
 		}
 		return false;
+	}
+
+	public void clear() {
+		queue.clear();
+		playerPartyMap.clear();
 	}
 
 }

@@ -1,6 +1,7 @@
 package implario.gaming;
 
 import lombok.Data;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
@@ -15,6 +16,12 @@ public class MatchMakingTest {
 			(a, b) -> Math.abs(averageRating(a) - averageRating(b)) < 130,
 			teams -> games.addLast(getFormat(teams))
 	);
+
+	@BeforeEach
+	public void before() {
+		games.clear();
+		matchMaking.clear();
+	}
 
 	@Data
 	private static class Player {
@@ -82,11 +89,10 @@ public class MatchMakingTest {
 			matchMaking.add(party(joiner));
 			matchMaking.add(party(joiner));
 		});
-		assertThrows(IllegalStateException.class, () -> {
+		matchMaking.remove(joiner);
+		assertDoesNotThrow(() -> {
 			matchMaking.add(party(joiner, joiner));
 		});
-
-		assertTrue(matchMaking.getPlayerPartyMap().isEmpty());
 	}
 
 	@Test
