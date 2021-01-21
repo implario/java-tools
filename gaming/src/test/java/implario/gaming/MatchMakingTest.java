@@ -1,10 +1,17 @@
 package implario.gaming;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.Timeout;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,20 +21,27 @@ public class MatchMakingTest {
 
 	private final MatchMaking<Player, Collection<Player>> matchMaking = new MatchMaking<>(
 			(a, b) -> Math.abs(averageRating(a) - averageRating(b)) < 130,
-			teams -> games.addLast(getFormat(teams))
+			teams -> {
+				games.addLast(getFormat(teams));
+				System.out.println("Created game " + getFormat(teams));
+			}
 	);
 
 	@BeforeEach
-	public void before() {
+	public void before(TestInfo info) {
+
+		System.out.println("\nTest " + info.getDisplayName());
 		games.clear();
 		matchMaking.clear();
 	}
 
 	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
 	private static class Player {
 
 		private final UUID uuid = UUID.randomUUID();
-		private final double rating;
+		private double rating;
 
 		@Override
 		public String toString() {
@@ -39,21 +53,24 @@ public class MatchMakingTest {
 	@Test
 	public void testSimpleMatchMaking() {
 
-		matchMaking.add(party(new Player(10), new Player(10), new Player(10)));
-		matchMaking.add(party(new Player(10), new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
-		matchMaking.add(party(new Player(10)));
+		assertTimeout(Duration.of(1, ChronoUnit.SECONDS), () -> {
+			matchMaking.add(party(new Player(10), new Player(10), new Player(10)));
+			matchMaking.add(party(new Player(10), new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
+			matchMaking.add(party(new Player(10)));
 
-		matchMaking.update(2, 3);
+			matchMaking.update(2, 3);
 
-		assertEquals("3x2", games.pop());
-		assertEquals("3x2", games.pop());
-		assertTrue(matchMaking.getQueue().isEmpty());
+			assertEquals("3x2", games.pop());
+			assertEquals("3x2", games.pop());
+			assertTrue(matchMaking.getQueue().isEmpty());
+		});
+
 
 	}
 
@@ -96,7 +113,7 @@ public class MatchMakingTest {
 	}
 
 	@Test
-	public void testRating() {
+	public void testTeamRating() {
 		List<Player> weakParty = party(new Player(10), new Player(20), new Player(30));
 		List<Player> mediumParty = party(new Player(110), new Player(120), new Player(130));
 		List<Player> strongParty = party(new Player(210), new Player(220), new Player(230));
@@ -113,6 +130,13 @@ public class MatchMakingTest {
 		// So weak party should get into the game first
 		assertEquals(strongParty, matchMaking.getQueue().get(0));
 		assertEquals("3x2", games.pop());
+
+	}
+
+	@Test
+	public void testSoloRating() {
+		List<Player> strongParty = party(new Player(210), new Player(220), new Player(230));
+		matchMaking.add(strongParty);
 
 		matchMaking.add(party(new Player(200)));
 		matchMaking.add(party(new Player(200)));
@@ -135,6 +159,43 @@ public class MatchMakingTest {
 		assertTrue(matchMaking.getQueue().isEmpty());
 		assertTrue(matchMaking.getPlayerPartyMap().isEmpty());
 
+	}
+
+	@Test
+	public void testFragmentation() {
+
+		matchMaking.add(party(new Player(), new Player(), new Player(), new Player()));
+		matchMaking.add(party(new Player(), new Player()));
+
+		matchMaking.update(2, 3);
+		assertTrue(matchMaking.getQueue().isEmpty());
+		
+		matchMaking.add(party(new Player(), new Player(), new Player(), new Player()));
+		matchMaking.add(party(new Player(), new Player(), new Player()));
+		matchMaking.add(party(new Player(), new Player()));
+		matchMaking.add(party(new Player()));
+
+		matchMaking.update(5, 2);
+		assertTrue(matchMaking.getQueue().isEmpty());
+
+	}
+
+	@Test
+	public void testOrder() {
+		Player firstPlayer = new Player();
+		matchMaking.add(party(firstPlayer));
+		for (int i = 0; i < 10000; i++) {
+			matchMaking.add(party(new Player()));
+		}
+
+		assertEquals(firstPlayer, matchMaking.pass(1, 1).get(0).iterator().next());
+	}
+
+	@Test
+	public void testOverflow() {
+		matchMaking.add(party(new Player(), new Player()));
+		matchMaking.update(1, 1);
+		assertTrue(games.isEmpty());
 	}
 
 	public double averageRating(Collection<Player> players) {
