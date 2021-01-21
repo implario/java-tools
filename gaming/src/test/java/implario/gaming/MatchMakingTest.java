@@ -192,9 +192,10 @@ public class MatchMakingTest {
 	}
 
 	@Test
-	public void testOverflow() {
-		matchMaking.add(party(new Player(), new Player()));
-		matchMaking.update(1, 1);
+	public void testIntegrity() {
+		matchMaking.add(party(new Player()));
+		matchMaking.add(party(new Player(), new Player(), new Player()));
+		matchMaking.update(2, 1);
 		assertTrue(games.isEmpty());
 	}
 
